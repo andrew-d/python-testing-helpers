@@ -49,6 +49,18 @@ else:
 
         return decorator
 
+if hasattr(unittest, 'skipIf'):
+    skip_if = unittest.skipIf
+else:
+    def skip_if(condition, reason):
+        if condition:
+            return skip(reason)
+        else:
+            def nop(obj):
+                return obj
+            return nop
+
+
 
 class _ExceptionCatcher(object):
     """

@@ -99,23 +99,30 @@ class BaseTestCase(unittest.TestCase):
     This TestCase subclass adds some useful aliases for the camelCased names
     in the standard library (like nose).
     """
+    number_of_assertions = 0
 
     def assert_equal(self, x, y):
+        BaseTestCase.number_of_assertions += 1
         return self.assertEqual(x, y)
 
     def assert_not_equal(self, x, y):
+        BaseTestCase.number_of_assertions += 1
         return self.assertNotEqual(x, y)
 
     def assert_true(self, x):
+        BaseTestCase.number_of_assertions += 1
         return self.assertTrue(x)
 
     def assert_false(self, x):
+        BaseTestCase.number_of_assertions += 1
         return self.assertFalse(x)
 
     def assert_in(self, x, y):
+        BaseTestCase.number_of_assertions += 1
         assert x in y, "{0!r} is not in {1!r}".format(x, y)
 
     def assert_raises(self, exception, callable=None, *args, **kwargs):
+        BaseTestCase.number_of_assertions += 1
         catcher = _ExceptionCatcher(self, exception)
         if callable is None:
             return catcher
@@ -123,6 +130,7 @@ class BaseTestCase(unittest.TestCase):
             callable(*args, **kwargs)
 
     def assert_is_instance(self, obj, type):
+        BaseTestCase.number_of_assertions += 1
         assert isinstance(obj, type), "{0!r} is not an instance of type {1!r}".format(obj, type)
 
     def setup(self):
@@ -149,12 +157,8 @@ def parameters(params_list, name_func=None):
     associated methods with parametrized versions.
     """
     def internal_decorator(func):
-        if is_python3():
-            func.__dict__['params'] = params_list
-            func.__dict__['name_func'] = name_func
-        else:
-            func.func_dict['params'] = params_list
-            func.func_dict['name_func'] = name_func
+        func.__dict__['params'] = params_list
+        func.__dict__['name_func'] = name_func
         return func
 
     return internal_decorator
@@ -168,10 +172,7 @@ class ParametrizingMetaclass(type):
             if not isinstance(attr, types.FunctionType):
                 continue
 
-            if is_python3():
-                func_dict = attr.__dict__
-            else:
-                func_dict = attr.func_dict
+            func_dict = attr.__dict__
 
             # If the function doesn't have a 'params' attribute,
             # we ignore it.
@@ -210,11 +211,7 @@ class ParametrizingMetaclass(type):
                     # We manually override the name, since the wraps() method
                     # might clobber that.
                     new_method.__name__ = new_name
-
-                    if is_python3():
-                        new_dict = new_method.__dict__
-                    else:
-                        new_dict = new_method.func_dict
+                    new_dict = new_method.__dict__
 
                     # Also, we remove the two attributes we've added from the
                     # function's dict (but don't error if they're not there).
